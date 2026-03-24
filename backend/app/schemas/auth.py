@@ -1,10 +1,10 @@
-from typing import Literal
+﻿from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from app.schemas.common import EditableRoleName, ResponseMeta, RoleName
 
-InvitationStatus = Literal["pending", "accepted", "expired"]
+InvitationStatus = Literal["pending", "accepted", "expired", "revoked"]
 
 
 class LoginRequest(BaseModel):
@@ -26,6 +26,7 @@ class LoginResponse(BaseModel):
 
 
 class CreateInvitationRequest(BaseModel):
+    family_id: str = Field(..., description="家庭 ID")
     invitee_name: str = Field(..., description="被邀请人姓名或称呼")
     invitee_email: str = Field(..., description="被邀请人邮箱")
     role: EditableRoleName = Field(..., description="被邀请人的家庭角色")
@@ -34,6 +35,7 @@ class CreateInvitationRequest(BaseModel):
 
 class InvitationData(BaseModel):
     invitation_id: str
+    family_id: str
     invitee_name: str
     invitee_email: str
     role: EditableRoleName

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 
 from app.schemas.common import EditableRoleName, ResponseMeta, RoleName
 
@@ -6,6 +6,8 @@ from app.schemas.common import EditableRoleName, ResponseMeta, RoleName
 class CreateFamilyRequest(BaseModel):
     name: str = Field(..., description="家庭名称")
     description: str | None = Field(default=None, description="家庭简介")
+    creator_email: str = Field(..., description="创建者邮箱")
+    creator_display_name: str = Field(..., description="创建者展示名称")
 
 
 class FamilyData(BaseModel):

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+﻿from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -8,6 +8,7 @@ class Settings:
     debug: bool = True
     api_v1_prefix: str = "/api/v1"
     cors_allow_origins: list[str] = field(default_factory=lambda: ["*"])
+    database_url: str = "sqlite+pysqlite:///./baby_growth.db"
 
 
 settings = Settings()
