@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+backend/.venv/
+frontend/.venv/
+.venv/
+venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local secrets and certificates
+*.pem
+*.key
+*.crt
+secrets/
+
+# Node
+node_modules/
+
+# Build / cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
