@@ -1,4 +1,5 @@
-﻿from app.models.base import Base
+﻿from app.models.agent import AgentMessage, AgentSession
+from app.models.base import Base
 from app.models.baby import Baby
 from app.models.family import Family, FamilyInvitation, FamilyMember
 from app.models.growth import GrowthRecord
@@ -19,4 +20,6 @@ __all__ = [
     "Reminder",
     "VaccinePlan",
     "VaccineRecord",
+    "AgentSession",
+    "AgentMessage",
 ]
