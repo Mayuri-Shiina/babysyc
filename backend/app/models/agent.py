@@ -1,6 +1,6 @@
-﻿from datetime import datetime
+﻿from datetime import date, datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -62,3 +62,34 @@ class AgentMessage(Base, TimestampMixin):
     session = relationship("AgentSession", back_populates="messages")
     baby = relationship("Baby")
     family = relationship("Family")
+
+
+class AgentSummary(Base, TimestampMixin):
+    __tablename__ = "agent_summaries"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    family_id: Mapped[str] = mapped_column(
+        ForeignKey("families.id"),
+        nullable=False,
+        index=True,
+    )
+    baby_id: Mapped[str] = mapped_column(
+        ForeignKey("babies.id"),
+        nullable=False,
+        index=True,
+    )
+    generated_by_user_id: Mapped[str] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True,
+    )
+    summary_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    period_start: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    period_end: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    key_points: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    baby = relationship("Baby")
+    family = relationship("Family")
+    generated_by_user = relationship("User")

@@ -1,4 +1,5 @@
-﻿from typing import Literal
+﻿from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -8,6 +9,14 @@ AgentSessionStatus = Literal["active", "archived"]
 AgentMessageRole = Literal["user", "assistant"]
 AgentInputType = Literal["text", "image", "voice"]
 RiskLevel = Literal["low", "medium", "high"]
+AgentSummaryType = Literal["weekly", "monthly"]
+AgentSuggestionPriority = Literal["low", "medium", "high"]
+AgentSuggestionKind = Literal[
+    "missing_growth_record",
+    "missing_media_description",
+    "age_based_prompt",
+    "pending_reminder",
+]
 
 
 class CreateAgentSessionRequest(BaseModel):
@@ -62,3 +71,48 @@ class AgentMessageListResponse(BaseModel):
 class CreateAgentMessageResponse(BaseModel):
     meta: ResponseMeta
     data: list[AgentMessageData]
+
+
+class GenerateAgentSummaryRequest(BaseModel):
+    family_id: str = Field(..., description="家庭 ID")
+    baby_id: str = Field(..., description="宝宝 ID")
+    generated_by_user_id: str = Field(..., description="生成人用户 ID")
+    anchor_date: date | None = Field(default=None, description="统计锚点日期，默认今天")
+
+
+class AgentSummaryData(BaseModel):
+    summary_id: str
+    family_id: str
+    baby_id: str
+    generated_by_user_id: str
+    summary_type: AgentSummaryType
+    period_start: str
+    period_end: str
+    title: str
+    content: str
+    key_points: list[str] = Field(default_factory=list)
+    created_at: str
+
+
+class AgentSummaryResponse(BaseModel):
+    meta: ResponseMeta
+    data: AgentSummaryData
+
+
+class AgentSummaryListResponse(BaseModel):
+    meta: ResponseMeta
+    data: list[AgentSummaryData]
+
+
+class AgentSuggestionData(BaseModel):
+    suggestion_id: str
+    kind: AgentSuggestionKind
+    title: str
+    content: str
+    reason: str
+    priority: AgentSuggestionPriority
+
+
+class AgentSuggestionListResponse(BaseModel):
+    meta: ResponseMeta
+    data: list[AgentSuggestionData]

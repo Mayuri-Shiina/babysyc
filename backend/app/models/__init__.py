@@ -1,4 +1,4 @@
-﻿from app.models.agent import AgentMessage, AgentSession
+﻿from app.models.agent import AgentMessage, AgentSession, AgentSummary
 from app.models.base import Base
 from app.models.baby import Baby
 from app.models.family import Family, FamilyInvitation, FamilyMember
@@ -22,4 +22,5 @@ __all__ = [
     "VaccineRecord",
     "AgentSession",
     "AgentMessage",
+    "AgentSummary",
 ]

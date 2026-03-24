@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db_session
-from app.models.agent import AgentMessage, AgentSession
+from app.models.agent import AgentMessage, AgentSession, AgentSummary
 from app.models.baby import Baby
 from app.models.family import Family
 from app.models.user import User
@@ -17,12 +17,18 @@ from app.schemas.agent import (
     AgentSessionData,
     AgentSessionListResponse,
     AgentSessionResponse,
+    AgentSuggestionData,
+    AgentSuggestionListResponse,
+    AgentSummaryData,
+    AgentSummaryListResponse,
+    AgentSummaryResponse,
     CreateAgentMessageRequest,
     CreateAgentMessageResponse,
     CreateAgentSessionRequest,
+    GenerateAgentSummaryRequest,
 )
 from app.schemas.common import ActorMeta, BabyContextMeta, ResponseMeta
-from app.services.agent_service import generate_agent_reply
+from app.services.agent_service import generate_agent_reply, generate_growth_summary, generate_record_suggestions
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -71,6 +77,36 @@ def build_agent_message_data(message: AgentMessage) -> AgentMessageData:
     )
 
 
+# 将总结模型转换为统一响应结构，便于首页和时间轴复用。
+def build_agent_summary_data(summary: AgentSummary) -> AgentSummaryData:
+    key_points = summary.key_points.split("\n") if summary.key_points else []
+    return AgentSummaryData(
+        summary_id=summary.id,
+        family_id=summary.family_id,
+        baby_id=summary.baby_id,
+        generated_by_user_id=summary.generated_by_user_id,
+        summary_type=summary.summary_type,
+        period_start=summary.period_start.isoformat(),
+        period_end=summary.period_end.isoformat(),
+        title=summary.title,
+        content=summary.content,
+        key_points=[item for item in key_points if item],
+        created_at=summary.created_at.isoformat(),
+    )
+
+
+# 将记录引导建议转换为统一响应结构，便于首页直接渲染卡片。
+def build_agent_suggestion_data(index: int, suggestion: object) -> AgentSuggestionData:
+    return AgentSuggestionData(
+        suggestion_id=f"suggestion-{index}",
+        kind=getattr(suggestion, "kind"),
+        title=getattr(suggestion, "title"),
+        content=getattr(suggestion, "content"),
+        reason=getattr(suggestion, "reason"),
+        priority=getattr(suggestion, "priority"),
+    )
+
+
 # 获取 Agent 接口所需的宝宝、家庭和操作者上下文。
 def resolve_agent_context(db: Session, family_id: str, baby_id: str) -> tuple[Baby, Family, User]:
     baby = db.get(Baby, baby_id)
@@ -88,6 +124,88 @@ def resolve_agent_context(db: Session, family_id: str, baby_id: str) -> tuple[Ba
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Actor not found")
 
     return baby, family, actor
+
+
+# 校验总结生成人是否存在，避免保存无效外键。
+def resolve_summary_generator(db: Session, generated_by_user_id: str) -> User:
+    generator = db.get(User, generated_by_user_id)
+    if generator is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Summary generator not found")
+    return generator
+
+
+# 统一处理总结生成流程，供周报和月报两个接口复用。
+async def create_growth_summary(
+    payload: GenerateAgentSummaryRequest,
+    summary_type: str,
+    db: Session,
+) -> AgentSummaryResponse:
+    baby, _, actor = resolve_agent_context(db=db, family_id=payload.family_id, baby_id=payload.baby_id)
+    resolve_summary_generator(db=db, generated_by_user_id=payload.generated_by_user_id)
+
+    existing_summary = db.scalars(
+        select(AgentSummary)
+        .where(
+            AgentSummary.family_id == payload.family_id,
+            AgentSummary.baby_id == payload.baby_id,
+            AgentSummary.summary_type == summary_type,
+        )
+        .order_by(AgentSummary.created_at.desc())
+        .limit(1)
+    ).first()
+
+    try:
+        period_start, period_end, title, content, key_points = await generate_growth_summary(
+            db=db,
+            family_id=payload.family_id,
+            baby=baby,
+            summary_type=summary_type,
+            anchor_date=payload.anchor_date,
+        )
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Upstream model request failed: {exc.response.text}",
+        ) from exc
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Upstream model request failed: {str(exc)}",
+        ) from exc
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    if existing_summary and existing_summary.period_start == period_start and existing_summary.period_end == period_end:
+        existing_summary.title = title
+        existing_summary.content = content
+        existing_summary.key_points = "\n".join(key_points)
+        existing_summary.generated_by_user_id = payload.generated_by_user_id
+        db.commit()
+        db.refresh(existing_summary)
+        summary = existing_summary
+    else:
+        summary = AgentSummary(
+            id=str(uuid4()),
+            family_id=payload.family_id,
+            baby_id=payload.baby_id,
+            generated_by_user_id=payload.generated_by_user_id,
+            summary_type=summary_type,
+            period_start=period_start,
+            period_end=period_end,
+            title=title,
+            content=content,
+            key_points="\n".join(key_points),
+        )
+        db.add(summary)
+        db.commit()
+        db.refresh(summary)
+
+    return AgentSummaryResponse(
+        meta=build_agent_meta(user=actor, baby=baby, permissions=["agent:summary:create", "agent:summary:read"]),
+        data=build_agent_summary_data(summary),
+    )
 
 
 # 返回 Agent 模块状态，便于确认模型配置和路由已经可用。
@@ -234,4 +352,58 @@ async def create_agent_message(
             build_agent_message_data(user_message),
             build_agent_message_data(assistant_message),
         ],
+    )
+
+
+# 生成当前宝宝的周报总结并保存，供首页和时间轴复用。
+@router.post("/summaries/weekly", response_model=AgentSummaryResponse)
+async def create_weekly_summary(
+    payload: GenerateAgentSummaryRequest,
+    db: Session = Depends(get_db_session),
+) -> AgentSummaryResponse:
+    return await create_growth_summary(payload=payload, summary_type="weekly", db=db)
+
+
+# 生成当前宝宝的月报总结并保存，供首页和时间轴复用。
+@router.post("/summaries/monthly", response_model=AgentSummaryResponse)
+async def create_monthly_summary(
+    payload: GenerateAgentSummaryRequest,
+    db: Session = Depends(get_db_session),
+) -> AgentSummaryResponse:
+    return await create_growth_summary(payload=payload, summary_type="monthly", db=db)
+
+
+# 返回指定宝宝的历史成长总结列表，便于首页和 Agent 页面复用。
+@router.get("/summaries", response_model=AgentSummaryListResponse)
+async def list_agent_summaries(
+    family_id: str = Query(..., description="家庭 ID"),
+    baby_id: str = Query(..., description="宝宝 ID"),
+    summary_type: str | None = Query(default=None, description="总结类型，可选 weekly 或 monthly"),
+    db: Session = Depends(get_db_session),
+) -> AgentSummaryListResponse:
+    baby, _, actor = resolve_agent_context(db=db, family_id=family_id, baby_id=baby_id)
+    query = select(AgentSummary).where(AgentSummary.family_id == family_id, AgentSummary.baby_id == baby_id)
+    if summary_type:
+        query = query.where(AgentSummary.summary_type == summary_type)
+    summaries = db.scalars(query.order_by(AgentSummary.period_end.desc(), AgentSummary.created_at.desc())).all()
+
+    return AgentSummaryListResponse(
+        meta=build_agent_meta(user=actor, baby=baby, permissions=["agent:summary:read"]),
+        data=[build_agent_summary_data(summary) for summary in summaries],
+    )
+
+
+# 返回当前宝宝的记录引导建议，供首页“今天建议记录什么”模块直接使用。
+@router.get("/suggestions", response_model=AgentSuggestionListResponse)
+async def list_agent_suggestions(
+    family_id: str = Query(..., description="家庭 ID"),
+    baby_id: str = Query(..., description="宝宝 ID"),
+    db: Session = Depends(get_db_session),
+) -> AgentSuggestionListResponse:
+    baby, _, actor = resolve_agent_context(db=db, family_id=family_id, baby_id=baby_id)
+    suggestions = await generate_record_suggestions(db=db, family_id=family_id, baby=baby)
+
+    return AgentSuggestionListResponse(
+        meta=build_agent_meta(user=actor, baby=baby, permissions=["agent:suggestion:read"]),
+        data=[build_agent_suggestion_data(index=index, suggestion=suggestion) for index, suggestion in enumerate(suggestions, start=1)],
     )
