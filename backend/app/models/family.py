@@ -27,6 +27,7 @@ class Family(Base, TimestampMixin):
     created_by_user = relationship("User", back_populates="created_families")
     members = relationship("FamilyMember", back_populates="family")
     invitations = relationship("FamilyInvitation", back_populates="family")
+    babies = relationship("Baby", back_populates="family")
 
 
 class FamilyMember(Base, TimestampMixin):

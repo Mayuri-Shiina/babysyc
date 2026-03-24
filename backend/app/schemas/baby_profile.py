@@ -1,9 +1,10 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 
 from app.schemas.common import BabyContextMeta, ResponseMeta
 
 
 class CreateBabyProfileRequest(BaseModel):
+    family_id: str = Field(..., description="家庭 ID")
     nickname: str = Field(..., description="宝宝昵称")
     birth_date: str = Field(..., description="出生日期，ISO 格式日期字符串")
     birth_time: str | None = Field(default=None, description="出生时间，HH:MM 格式")
@@ -16,6 +17,7 @@ class CreateBabyProfileRequest(BaseModel):
 
 class UpdateBabyProfileRequest(BaseModel):
     nickname: str | None = Field(default=None, description="宝宝昵称")
+    birth_time: str | None = Field(default=None, description="出生时间，HH:MM 格式")
     gender: str | None = Field(default=None, description="宝宝性别")
     birth_place: str | None = Field(default=None, description="出生地点")
     birth_height_cm: float | None = Field(default=None, description="出生身高，单位厘米")
@@ -24,6 +26,7 @@ class UpdateBabyProfileRequest(BaseModel):
 
 
 class SwitchCurrentBabyRequest(BaseModel):
+    family_id: str = Field(..., description="家庭 ID")
     baby_id: str = Field(..., description="目标宝宝 ID")
 
 
