@@ -2,21 +2,15 @@
 import {
   Bell,
   Camera,
-  ChevronRight,
   Heart,
   MessageCircleMore,
   Ruler,
-  Sparkles,
   Stethoscope,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 
 const pendingReminders = [
@@ -36,30 +30,21 @@ const quickActions = [
   {
     id: "quick-growth",
     title: "记体征",
-    description: "宝宝最近会独坐了吗？点击记录。",
     href: "/growth",
     icon: Ruler,
   },
   {
     id: "quick-media",
     title: "传照片",
-    description: "把今天的可爱瞬间放进成长相册。",
     href: "/media",
     icon: Camera,
   },
   {
     id: "quick-agent",
     title: "问问 Agent",
-    description: "看看最近有哪些成长变化值得关注。",
     href: "/agent",
     icon: MessageCircleMore,
   },
-];
-
-const recentMedia = [
-  { id: "media-1", label: "第一次趴趴看", tone: "bg-[#f5dfd2]" },
-  { id: "media-2", label: "午后晒太阳", tone: "bg-[#eadcc8]" },
-  { id: "media-3", label: "和外婆互动", tone: "bg-[#d8c6bb]" },
 ];
 
 const latestGrowthRecords = [
@@ -112,24 +97,21 @@ function HeroCard() {
   return (
     <Card className="overflow-hidden rounded-[2rem] border-white/35 bg-white/50 shadow-[0_24px_80px_rgba(161,124,98,0.16)] backdrop-blur-2xl">
       <CardContent className="relative overflow-hidden px-6 py-6 sm:px-7 sm:py-7">
-        <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.8),_rgba(255,255,255,0))]" />
-        <div className="grid gap-6 sm:grid-cols-[auto_1fr] sm:items-center">
-          <div className="relative flex h-28 w-28 items-center justify-center rounded-[2rem] bg-[linear-gradient(160deg,#fff7f0_0%,#edd8c8_100%)] p-1 shadow-[0_18px_40px_rgba(178,139,110,0.22)]">
-            <div className="flex h-full w-full items-center justify-center rounded-[1.65rem] bg-[linear-gradient(180deg,#fff9f4_0%,#f1dfd1_100%)] text-3xl font-semibold text-[#a27f69]">
-              糯
+        <div className="absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.8),_rgba(255,255,255,0))]" />
+        <div className="space-y-2">
+          <div className="flex items-start gap-4">
+            <div className="-mt-2 flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-[1.5rem] bg-[linear-gradient(180deg,#fff9f4_0%,#f1dfd1_100%)] text-2xl font-semibold text-[#a27f69] shadow-[0_14px_32px_rgba(178,139,110,0.16)] ring-1 ring-white/80 sm:h-20 sm:w-20 sm:text-3xl">
+                糯
             </div>
-          </div>
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-[#9c7b68]">
+            <div className="flex flex-col gap-2 pt-1 text-sm text-[#9c7b68]">
               <span className="rounded-full bg-[#fff4eb] px-3 py-1 font-medium">第 128 天</span>
               <span className="rounded-full bg-[#f1e2d6] px-3 py-1 font-medium">4 个月 8 天</span>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-semibold tracking-tight text-[#5b4337] sm:text-[2rem]">
-                小家伙正在把每一天都长成新的模样。
-              </h2>
-              <p className="max-w-2xl text-sm leading-7 text-[#81685a] sm:text-base">{getHeroSummary()}</p>
-            </div>
+          </div>
+          <div>
+            <p className="max-w-2xl text-lg leading-8 font-medium text-[#5b4337] sm:text-[1.35rem]">
+              {getHeroSummary()}
+            </p>
           </div>
         </div>
       </CardContent>
@@ -144,77 +126,68 @@ function PendingRemindersSection() {
     return null;
   }
 
+  const [primaryReminder, ...otherReminders] = pendingReminders;
+
   return (
     <section className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-[#8f6d5b]">
-        <Bell className="size-4" />
-        <span>待留意的提醒</span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm font-medium text-[#8f6d5b]">
+          <Bell className="size-4" />
+          <span>待留意的提醒</span>
+        </div>
+        {otherReminders.length > 0 ? (
+          <span className="text-xs text-[#a48674]">还有 {otherReminders.length} 条</span>
+        ) : null}
       </div>
-      <div className="grid gap-3">
-        {pendingReminders.map((reminder) => (
-          <Card
-            key={reminder.id}
-            className="rounded-[1.75rem] border border-[#ecd7c7]/70 bg-[linear-gradient(180deg,rgba(255,250,246,0.92)_0%,rgba(249,236,224,0.88)_100%)] shadow-[0_16px_40px_rgba(193,155,125,0.12)] backdrop-blur-xl"
-          >
-            <CardContent className="flex items-start gap-4 px-5 py-5">
-              <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f4dcc8] text-[#a87e65]">
-                <Stethoscope className="size-5" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold text-[#674d3f]">{reminder.title}</h3>
-                <p className="text-sm leading-6 text-[#896d5c]">{reminder.detail}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card className="rounded-[1.75rem] border border-[#ecd7c7]/70 bg-[linear-gradient(180deg,rgba(255,250,246,0.92)_0%,rgba(249,236,224,0.88)_100%)] shadow-[0_16px_40px_rgba(193,155,125,0.12)] backdrop-blur-xl">
+        <CardContent className="flex items-start gap-4 px-5 py-5">
+          <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#f4dcc8] text-[#a87e65]">
+            <Stethoscope className="size-5" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-[#674d3f]">{primaryReminder.title}</h3>
+            <p className="text-sm leading-6 text-[#896d5c]">{primaryReminder.detail}</p>
+          </div>
+        </CardContent>
+      </Card>
     </section>
   );
 }
 
 
-// 渲染今日建议记录与快捷录入区域，降低首页首屏的记录门槛。
+// 渲染轻量快捷操作区，让首页聚焦“我现在可以做什么”。
 function QuickActionsSection() {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-[#7f6352]">今日建议记录</p>
-          <p className="text-xs text-[#a08372]">把容易错过的小变化，轻轻记下来。</p>
+          <p className="text-sm font-medium text-[#7f6352]">快捷入口</p>
+          <p className="text-xs text-[#a08372]">首页只保留轻入口，详细内容放到各自模块里。</p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          className="rounded-full px-3 text-xs text-[#8e725f] hover:bg-[#f5e7db] hover:text-[#6f5547]"
+        <Link
+          href="/growth"
+          className="inline-flex h-8 items-center justify-center rounded-full px-3 text-xs font-medium text-[#8e725f] transition-all hover:bg-[#f5e7db] hover:text-[#6f5547]"
         >
-          更多建议
-        </Button>
+          去记录
+        </Link>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-3">
         {quickActions.map((action) => {
           const ActionIcon = action.icon;
           return (
-            <Card
+            <Link
               key={action.id}
+              href={action.href}
+              aria-label={action.title}
               className="rounded-[1.75rem] border border-white/45 bg-white/60 shadow-[0_18px_50px_rgba(184,146,119,0.12)] backdrop-blur-xl"
             >
-              <CardContent className="flex h-full flex-col gap-4 px-5 py-5">
+              <CardContent className="flex flex-col items-center gap-3 px-3 py-4 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#fff2e8] text-[#ab8268] shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
                   <ActionIcon className="size-5" />
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-base font-semibold text-[#5f4739]">{action.title}</h3>
-                  <p className="text-sm leading-6 text-[#8d7362]">{action.description}</p>
-                </div>
-                <Link
-                  href={action.href}
-                  className="mt-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-full bg-[#9f785f] px-2.5 text-sm font-medium whitespace-nowrap text-[#fff8f3] shadow-[0_18px_40px_rgba(159,120,95,0.22)] transition-all hover:bg-[#906b54]"
-                >
-                  立即前往
-                  <ChevronRight className="size-4" />
-                </Link>
+                <span className="text-sm font-medium text-[#5f4739]">{action.title}</span>
               </CardContent>
-            </Card>
+            </Link>
           );
         })}
       </div>
@@ -222,87 +195,14 @@ function QuickActionsSection() {
   );
 }
 
-
-// 渲染本周成长总结卡片，突出 Agent 生成价值和回顾感。
-function AgentSummarySection() {
-  return (
-    <Card className="rounded-[2rem] border-white/45 bg-[linear-gradient(180deg,rgba(255,249,244,0.92)_0%,rgba(247,236,227,0.88)_100%)] shadow-[0_24px_60px_rgba(180,143,116,0.14)] backdrop-blur-xl">
-      <CardHeader className="gap-3 px-6 pt-6">
-        <div className="flex items-center gap-2 text-sm font-medium text-[#8d6e5d]">
-          <Sparkles className="size-4" />
-          <span>本周成长总结</span>
-        </div>
-        <div className="space-y-2">
-          <CardTitle className="text-xl text-[#5f4738]">这一周，笑容和互动都悄悄变多了。</CardTitle>
-          <CardDescription className="max-w-2xl text-sm leading-7 text-[#876d5d]">
-            Agent 观察到，这周宝宝的互动状态更积极，睡眠节奏也更稳定。最近上传的照片和最新体征记录都显示，小家伙正在一点点长成更有回应的小朋友。
-          </CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="grid gap-3 px-6 pb-6 sm:grid-cols-3">
-        <div className="rounded-[1.5rem] bg-white/60 p-4 text-sm leading-6 text-[#7b6254]">
-          <p className="font-medium text-[#5d4538]">亮点 1</p>
-          <p>开始更频繁地看向熟悉的人，互动反馈更明显。</p>
-        </div>
-        <div className="rounded-[1.5rem] bg-white/60 p-4 text-sm leading-6 text-[#7b6254]">
-          <p className="font-medium text-[#5d4538]">亮点 2</p>
-          <p>最近照片记录更丰富，成长回忆有了更连续的片段。</p>
-        </div>
-        <div className="rounded-[1.5rem] bg-white/60 p-4 text-sm leading-6 text-[#7b6254]">
-          <p className="font-medium text-[#5d4538]">建议</p>
-          <p>下周可以多补一条睡眠或翻身尝试的记录，方便后续回看。</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-
-// 渲染最近相册和视频回忆区域，满足回顾与“看娃”的高频需求。
-function RecentMediaSection() {
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-[#5f4738]">最近相册回忆</h3>
-          <p className="text-sm text-[#8e7463]">翻看最近留下的可爱瞬间。</p>
-        </div>
-        <Link
-          href="/media"
-          className="inline-flex h-8 items-center justify-center rounded-full px-3 text-sm font-medium text-[#8d725f] transition-all hover:bg-[#f5e8dc]"
-        >
-          查看全部
-        </Link>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-3">
-        {recentMedia.map((item) => (
-          <Card
-            key={item.id}
-            className="rounded-[1.75rem] border border-white/45 bg-white/60 shadow-[0_16px_45px_rgba(181,143,116,0.12)] backdrop-blur-xl"
-          >
-            <CardContent className="space-y-3 px-4 py-4">
-              <div className={`aspect-[4/3] rounded-[1.5rem] ${item.tone} shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]`} />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-[#61493b]">{item.label}</p>
-                <p className="text-xs text-[#9c7f6d]">今天 14:20 · 相册已更新</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-
-// 渲染最新成长体征记录区域，作为进入成长页的自然入口。
+// 渲染最新成长摘要区域，首页只保留轻量结果和进入成长页的入口。
 function LatestGrowthRecordSection() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-[#5f4738]">最新成长记录</h3>
-          <p className="text-sm text-[#8d7362]">看看最近一次记录到了哪些变化。</p>
+          <h3 className="text-lg font-semibold text-[#5f4738]">最新成长摘要</h3>
+          <p className="text-sm text-[#8d7362]">首页先看关键变化，详细分析放到成长页。</p>
         </div>
         <Link
           href="/growth"
@@ -311,16 +211,16 @@ function LatestGrowthRecordSection() {
           进入成长页
         </Link>
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-3">
         {latestGrowthRecords.map((record) => (
           <Card
             key={record.id}
-            className="rounded-[1.75rem] border border-white/45 bg-white/60 shadow-[0_18px_50px_rgba(183,145,117,0.11)] backdrop-blur-xl"
+            className="rounded-[1.5rem] border border-white/45 bg-white/60 shadow-[0_14px_36px_rgba(183,145,117,0.1)] backdrop-blur-xl"
           >
-            <CardContent className="space-y-2 px-5 py-5">
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#a18270]">{record.label}</p>
-              <p className="text-2xl font-semibold text-[#5f4739]">{record.value}</p>
-              <p className="text-sm leading-6 text-[#8c7261]">{record.note}</p>
+            <CardContent className="px-3 py-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#a18270]">{record.label}</p>
+              <p className="mt-2 text-xl font-semibold text-[#5f4739]">{record.value}</p>
+              <p className="mt-1 text-xs leading-5 text-[#8c7261]">{record.note}</p>
             </CardContent>
           </Card>
         ))}
@@ -358,11 +258,7 @@ export function HomeShell() {
         <HeroCard />
         <PendingRemindersSection />
         <QuickActionsSection />
-        <div className="space-y-6 pt-2">
-          <AgentSummarySection />
-          <RecentMediaSection />
-          <LatestGrowthRecordSection />
-        </div>
+        <LatestGrowthRecordSection />
       </main>
       <BottomNavigation />
     </div>
