@@ -5,6 +5,7 @@ from app.models.growth import GrowthRecord
 from app.models.media import MediaAsset
 from app.models.reminder import Reminder
 from app.models.user import User
+from app.models.vaccine import VaccinePlan, VaccineRecord
 
 __all__ = [
     "Base",
@@ -16,4 +17,6 @@ __all__ = [
     "GrowthRecord",
     "MediaAsset",
     "Reminder",
+    "VaccinePlan",
+    "VaccineRecord",
 ]
